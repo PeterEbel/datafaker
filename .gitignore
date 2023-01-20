@@ -1,0 +1,7 @@
+venv/
+.vscode/
+customers.csv
+customers-mariadb.csv
+customers-postgres.csv
+balances-mariadb.csv
+*.txt
