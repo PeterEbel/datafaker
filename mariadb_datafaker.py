@@ -1,59 +1,45 @@
 # pylint: disable=E1101
 
-# Project:        datafaker_postgres
-# Creation Date:  2023-08-11
+# Project:        db_datafaker
+# Creation Date:  2022-04-13
 # Author:         Peter Ebel (peter.ebel@santander.de)
-# Objective:      creation of fake data records in PostgreSQL
+# Objective:      creation of fake data records in MySQL for CDC
 #
 # Modification Log:
 # Version Date        Modified By	Modification Details
-# 1.0.0   2023-08-11  Ebel          Initial creation of the script
+# 1.0.0   2022-04-13  Ebel          Initial creation of the script
 
 import random
 import io
 import time
+import mysql.connector
 import psycopg2
-from threading import Timer
 from faker import Faker
+
+# create MySQL database connector
+mydb = mysql.connector.connect(
+    host="localhost",
+    user="spark",
+    password="***",
+    database="shop"
+)
+mycursor = mydb.cursor()
+
+log_data_generation = open('log_data_generation.txt', 'w+')
+
+def log_data_generation_msg(message):
+    log_data_generation.write(message)
+
 
 def get_max_number(database, table, column):
      stmt = "SELECT MAX({column}) from {database}.{table};".format(column=column, database=database, table=table)
-     cursor.execute(stmt)
-     return cursor.fetchone()[0]
+     mycursor.execute(stmt)
+     return mycursor.fetchone()[0]
 
-# connection to the database
-def connect_to_postgres():
-
-    global connection
-    global cursor
-
-    db_params = {
-        'host': 'localhost',
-        'database': 'galeria_anatomica',
-        'user': 'peter',
-        'password': 'guiltyspark',
-    }
-
-    # establish a connection to the database
-    try:
-        connection = psycopg2.connect(**db_params)
-        cursor = connection.cursor()
-
-        create_records('shop', 'customers', 10, 15, '2023-08-11')
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while connecting to PostgreSQL:", error)
-
-    finally:
-        # Close the cursor and connection
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-
-def create_records(database, table, max_records, delay, date_partition):
+def create_records(database, table, max_records, date_partition):
     fake = Faker('de_DE')
-    record_number = get_max_number(database, table, 'record_number')
+    datepart = '2022-04-08'
+    record_number = get_max_number('shop', 'customers', 'record_number')
     if record_number is not None:
         record_number = record_number + 1
     else:
@@ -67,7 +53,6 @@ def create_records(database, table, max_records, delay, date_partition):
     f.close()
 
     for _ in range(max_records):
-        time.sleep(delay)
         c = random.choice(list(cities.items()))
         gc = 'M' if random.randint(0, 1) == 0 else 'F'
         mydict = {
@@ -80,22 +65,25 @@ def create_records(database, table, max_records, delay, date_partition):
             'first_name': fake.first_name_male() if gc == 'M' else fake.first_name_female(),
             'last_name': fake.last_name(),
             'birth_date': fake.date_of_birth(tzinfo=None, minimum_age=18, maximum_age=80).strftime('%Y-%m-%d'),
-            'country_code': 'DE',
             'postal_code': c[0],
             'city': c[1].rstrip(),
-            'street': fake.street_name(),
-            'data_date_part': date_partition
+            'street': fake.street_name()
         }
         record_number = record_number + 1
 
         # compose and write customer record
         placeholder = ", ".join(["%s"] * len(mydict))
         stmt = "INSERT INTO {database}.{table} ({columns}) VALUES ({values});".format(database=database, table=table, columns=", ".join(mydict.keys()), values=placeholder)
-        cursor.execute(stmt, list(mydict.values()))
-        connection.commit()
+        mycursor.execute(stmt, list(mydict.values()))
+        mydb.commit()
+        print(record_number)
+
+        time.sleep(30)
+
 
 def main():
-    connect_to_postgres()
+    create_records('shop', 'customers', 1000, '2022-04-13')
+
 
 if __name__ == '__main__':
     main()

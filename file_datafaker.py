@@ -23,7 +23,7 @@ def main():
     fake = Faker('de_DE')
 
     datepart = '2023-04-11'
-    max_records = 10
+    max_records = 10000
     record_number = 1
 
     # load cities and postal codes into a dict
