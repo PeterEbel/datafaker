@@ -22,9 +22,9 @@ def log_data_generation_msg(message):
 def main():
     fake = Faker('de_DE')
 
-    datepart = '2022-04-08'
-    max_records = 10000
-    id = 1
+    datepart = '2023-04-11'
+    max_records = 10
+    record_number = 1
 
     # load cities and postal codes into a dict
     cities = {}
@@ -35,12 +35,12 @@ def main():
     f.close()
 
     # open output files
-    customers = io.open('customers.csv', 'w+')
+    customers = io.open('customers-postgres.csv', 'w+')
     balances = io.open('balances.csv', 'w+')
 
     # write table headers
-    customers_header = 'id' + '|'+ 'entity_id' + '|' + 'customer_number' + '|' + 'valid_from_date' + '|' + 'valid_to_date' + '|' + 'gender_code' + '|' + 'last_name'  + '|' + 'first_name' + '|' + 'birth_date' + '|' + 'country_code' + '|' + 'postal_code' + '|' + 'city' + '|' + 'street' + '|' + 'data_date_part' + '\n'
-    balances_header = 'id' + '|'+ 'entity_id' + '|' + 'customer_number' + '|' + 'instalment_amount' + '|' + 'term' + '|' + 'debt_amount'  + '|' + 'data_date_part' + '\n'
+    customers_header = 'record_number' + '|'+ 'entity_id' + '|' + 'customer_number' + '|' + 'valid_from_date' + '|' + 'valid_to_date' + '|' + 'gender_code' + '|' + 'last_name'  + '|' + 'first_name' + '|' + 'birth_date' + '|' + 'country_code' + '|' + 'postal_code' + '|' + 'city' + '|' + 'street' + '|' + 'data_date_part' + '\n'
+    balances_header = 'record_number' + '|'+ 'entity_id' + '|' + 'customer_number' + '|' + 'instalment_amount' + '|' + 'term' + '|' + 'debt_amount'  + '|' + 'data_date_part' + '\n'
     customers.writelines(str(customers_header))
     balances.writelines(str(balances_header))
 
@@ -63,7 +63,7 @@ def main():
 
         # compose and write customer record
         customer_record = str(
-            id) + '|' + entity_id + '|' + customer_number + '|' + valid_from_date + '|' + valid_to_date + '|' + gender_code + '|' + last_name + '|' + first_name + '|' + birth_date + '|' + 'DE' + '|' + postal_code + '|' + city + '|' + street + '|' + datepart + '\n'
+            record_number) + '|' + entity_id + '|' + customer_number + '|' + valid_from_date + '|' + valid_to_date + '|' + gender_code + '|' + last_name + '|' + first_name + '|' + birth_date + '|' + 'DE' + '|' + postal_code + '|' + city + '|' + street + '|' + datepart + '\n'
         customers.writelines(customer_record)
 
         # create balances fake data
@@ -75,7 +75,7 @@ def main():
             customer_number_balances = '000000000'
             log_data_generation_msg(
                 'balances | record %s | referential integrity error, unknown customer number\n' % str(
-                    id).rjust(len(str(max_records))))
+                    record_number).rjust(len(str(max_records))))
 
         instalment_amount = round(random.uniform(100.00, 500.00), 2)
         term = random.randint(1, 48)
@@ -85,25 +85,25 @@ def main():
         elif rd == 298:
             residual_debt = round(instalment_amount * term, 2) + 1
             log_data_generation_msg(
-                'balances | record %s | residual debt calculation is wrong\n' % str(id).rjust(
+                'balances | record %s | residual debt calculation is wrong\n' % str(record_number).rjust(
                     len(str(max_records))))
         elif rd == 299:
             instalment_amount = 10.00
             residual_debt = "%.2f" % round(instalment_amount * term, 2)
             log_data_generation_msg('balances | record %s | minValue violation: instalment amount < 100\n' % str(
-                id).rjust(len(str(max_records))))
+                record_number).rjust(len(str(max_records))))
         else:
             term = 72
             residual_debt = "%.2f" % round(instalment_amount * term, 2)
             log_data_generation_msg(
-                'balances | record %s | maxValue violation: term > 48\n' % str(id).rjust(
+                'balances | record %s | maxValue violation: term > 48\n' % str(record_number).rjust(
                     len(str(max_records))))
 
-        balances_record = str(id) + '|' + entity_id_balances + '|' + customer_number_balances + '|' + str(
+        balances_record = str(record_number) + '|' + entity_id_balances + '|' + customer_number_balances + '|' + str(
             "%.2f" % instalment_amount) + '|' + str(term) + '|' + str(residual_debt) + '|' + datepart + '\n'
         balances.writelines(balances_record)
 
-        id = id + 1
+        record_number = record_number + 1
 
     # close all open files
     customers.close()
