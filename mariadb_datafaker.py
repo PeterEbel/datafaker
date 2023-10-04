@@ -13,7 +13,6 @@ import random
 import io
 import time
 import mysql.connector
-import psycopg2
 from faker import Faker
 
 # create MySQL database connector
