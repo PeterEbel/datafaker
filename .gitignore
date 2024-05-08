@@ -1,5 +1,4 @@
-venv/
-.vscode/
+balances.csv
 customers.csv
 customers-mariadb.csv
 customers-postgres.csv

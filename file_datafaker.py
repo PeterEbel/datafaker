@@ -22,7 +22,7 @@ def log_data_generation_msg(message):
 def main():
     fake = Faker('de_DE')
 
-    datepart = '2023-04-11'
+    datepart = '2024-05-09'
     max_records = 10000
     record_number = 1
 
@@ -35,7 +35,7 @@ def main():
     f.close()
 
     # open output files
-    customers = io.open('customers-postgres.csv', 'w+')
+    customers = io.open('customers.csv', 'w+')
     balances = io.open('balances.csv', 'w+')
 
     # write table headers
